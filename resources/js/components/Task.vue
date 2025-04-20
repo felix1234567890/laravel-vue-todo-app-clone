@@ -2,27 +2,25 @@
   <tr>
     <td>{{task.id}}</td>
     <td>{{task.title}}</td>
-    <td>{{task.priority}} </td>
-    <td><button
-        class="btn btn-danger btn-block"
+    <td>{{priorityCapitalized}}</td>
+    <td><button class="btn btn-danger"
         @click="remove"
       >Remove</button></td>
   </tr>
 </template>
 
-<script>
-export default {
-  data() {
-    return {};
-  },
-  props: ["task"],
-  methods: {
-    remove() {
-      this.$emit("delete", this.task.id);
-    }
-  }
-};
-</script>
+<script setup>
+import { computed, defineEmits, defineProps } from 'vue';
 
-<style>
-</style>
+const props = defineProps(['task']);
+const emit = defineEmits(['delete']);
+
+const priorityCapitalized = computed(() => {
+  if (!props.task.priority) return '';
+  return props.task.priority.charAt(0).toUpperCase() + props.task.priority.slice(1);
+});
+
+function remove() {
+  emit('delete', props.task.id);
+}
+</script>

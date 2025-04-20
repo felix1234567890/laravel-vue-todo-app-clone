@@ -4,31 +4,20 @@
  * building robust, powerful web applications using Vue and Laravel.
  */
 
-require("./bootstrap");
+import axios from 'axios';
+import { createApp } from 'vue';
+import './bootstrap';
 
-window.Vue = require("vue");
-window.axios = require("axios");
-
-/**
- * The following block of code may be used to automatically register your
- * Vue components. It will recursively scan this directory for the Vue
- * components and automatically register them with their "basename".
- *
- * Eg. ./components/ExampleComponent.vue -> <example-component></example-component>
- */
-
-// const files = require.context('./', true, /\.vue$/i)
-// files.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], files(key)))
-
-import App from "./components/App";
+window.axios = axios;
 
 /**
- * Next, we will create a fresh Vue application instance and attach it to
- * the page. Then, you may begin adding components to this application
- * or customize the JavaScript scaffolding to fit your unique needs.
+ * Next, we will create a fresh Vue application instance. You may then begin
+ * registering components with the application instance so they are ready
+ * to use in your application's views. An example is included for you.
  */
 
-const app = new Vue({
-    el: "#app",
-    components: { App }
-});
+import App from './components/App.vue';
+
+const app = createApp(App);
+
+app.mount('#app');
