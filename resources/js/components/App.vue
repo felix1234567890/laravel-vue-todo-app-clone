@@ -42,7 +42,7 @@ const tasks = ref([]);
 const task = reactive({ title: "", priority: "low" });
 const errors = reactive({});
 const loading = ref(false);
-const taskInput = ref(null);
+const taskInput = ref({ current: null });
 
 // Lifecycle hooks
 onMounted(() => {
@@ -94,7 +94,7 @@ async function store() {
     Object.keys(errors).forEach(key => delete errors[key]);
     // Focus input for faster entry
     await nextTick();
-    if (taskInput.value) taskInput.value.focus();
+    if (taskInput.value && typeof taskInput.value.focus === 'function') taskInput.value.focus();
   } catch (error) {
     console.error('Error creating task:', error);
     if (error.response && error.response.data) {

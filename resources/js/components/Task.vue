@@ -12,6 +12,9 @@
 <script setup>
 import { computed, defineEmits, defineProps } from 'vue';
 
+// Add component name for test discovery
+const name = 'TaskComponent';
+
 const props = defineProps(['task']);
 const emit = defineEmits(['delete']);
 
