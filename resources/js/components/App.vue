@@ -1,11 +1,11 @@
 <template>
-  <div>
-    <table class="table">
+  <div class="container mt-5">
+    <table class="table mt-4">
       <thead>
         <tr>
           <th>Id</th>
-          <th>Task title</th>
-          <th>Priority</th>
+          <th><label for="task">Task title</label></th>
+          <th><label for="select">Priority</label></th>
           <th>Action</th>
         </tr>
       </thead>
@@ -16,43 +16,13 @@
           :task="taskItem"
           @delete="remove"
         />
-        <tr>
-          <td></td>
-          <td>
-            <input
-              type="text"
-              id="task"
-              class="form-control"
-              v-model="task.title"
-              :class="{'is-invalid': errors.title}"
-            >
-            <div v-if="errors.title" class="invalid-feedback">
-              {{ errors.title }}
-            </div>
-          </td>
-          <td>
-            <select
-              id="select"
-              class="form-control"
-              v-model="task.priority"
-              :class="{'is-invalid': errors.priority}"
-            >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
-            <div v-if="errors.priority" class="invalid-feedback">
-              {{ errors.priority }}
-            </div>
-          </td>
-          <td>
-            <button
-              @click="store"
-              class="btn btn-primary btn-block"
-              :disabled="!task.title.trim() || !task.priority"
-            >Add</button>
-          </td>
-        </tr>
+        <TaskForm
+          :task="task"
+          :errors="errors"
+          :loading="loading"
+          :taskInput="taskInput"
+          @store="store"
+        />
       </tbody>
     </table>
   </div>
@@ -60,13 +30,19 @@
 
 <script setup>
 import axios from 'axios';
-import { onMounted, reactive, ref } from 'vue';
+import { onMounted, reactive, ref, nextTick } from 'vue';
 import TaskComponent from "./Task.vue";
+import TaskForm from "./TaskForm.vue";
+
+// API endpoint constants
+const API_TASKS = "/api/tasks";
 
 // State
 const tasks = ref([]);
 const task = reactive({ title: "", priority: "low" });
 const errors = reactive({});
+const loading = ref(false);
+const taskInput = ref(null);
 
 // Lifecycle hooks
 onMounted(() => {
@@ -74,10 +50,13 @@ onMounted(() => {
 });
 
 // Methods
-function getTasks() {
-  axios
-    .get("/api/tasks/")
-    .then(({ data }) => data.forEach(item => tasks.value.push(item)));
+async function getTasks() {
+  try {
+    const { data } = await axios.get(`${API_TASKS}/`);
+    tasks.value = data;
+  } catch (error) {
+    console.error('Failed to load tasks:', error);
+  }
 }
 
 function validateForm() {
@@ -98,40 +77,38 @@ function validateForm() {
   return Object.keys(errors).length === 0;
 }
 
-function store() {
+async function store() {
   if (!validateForm()) {
     return;
   }
+  loading.value = true;
 
-  // Add detailed logging
-  console.log('Sending task data:', JSON.stringify(task));
-
-  axios.post("/api/tasks", task)
-    .then(response => {
-      console.log('Success response:', response.data);
-      tasks.value.push(response.data);
-      setTimeout(() => window.location.reload(), 100);
-      task.title = "";
-      task.priority = "low";
-      Object.keys(errors).forEach(key => delete errors[key]);
-    })
-    .catch(error => {
-      console.error('Error creating task:', error);
-      console.error('Error response data:', error.response ? error.response.data : 'No response data');
-      console.error('Error request config:', error.config);
-
-      // Handle validation errors from the server
-      if (error.response && error.response.status === 422 && error.response.data.errors) {
-        console.error('Validation errors:', error.response.data.errors);
-        Object.assign(errors, error.response.data.errors);
-      } else {
-        alert('Error creating task: ' + (error.response && error.response.data.message ? error.response.data.message : 'Unknown error'));
-      }
-    });
+  try {
+    // Add detailed logging
+    console.log('Sending task data:', JSON.stringify(task));
+    const response = await axios.post(API_TASKS, task);
+    console.log('Success response:', response.data);
+    tasks.value.push(response.data);
+    task.title = "";
+    task.priority = "low";
+    Object.keys(errors).forEach(key => delete errors[key]);
+    // Focus input for faster entry
+    await nextTick();
+    if (taskInput.value) taskInput.value.focus();
+  } catch (error) {
+    console.error('Error creating task:', error);
+    if (error.response && error.response.data) {
+      Object.assign(errors, error.response.data.errors || {});
+    } else {
+      errors.title = 'Failed to add task.';
+    }
+  } finally {
+    loading.value = false;
+  }
 }
 
 function remove(id) {
-  axios.delete("/api/tasks/" + id)
+  axios.delete(`${API_TASKS}/${id}`)
     .then(() => {
       const index = tasks.value.findIndex(task => task.id === id);
       if (index !== -1) {
@@ -146,4 +123,14 @@ function remove(id) {
 </script>
 
 <style>
+.spinner-border { margin-right: 4px; }
+.table {
+  margin-bottom: 0;
+}
+tr > td, tr > th {
+  vertical-align: middle;
+}
+.container {
+  max-width: 900px;
+}
 </style>

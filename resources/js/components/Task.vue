@@ -3,9 +3,9 @@
     <td>{{task.id}}</td>
     <td>{{task.title}}</td>
     <td>{{priorityCapitalized}}</td>
-    <td><button class="btn btn-danger"
-        @click="remove"
-      >Remove</button></td>
+    <td><button class="btn btn-danger w-100 btn-lg"
+      @click="remove"
+    >Remove</button></td>
   </tr>
 </template>
 
